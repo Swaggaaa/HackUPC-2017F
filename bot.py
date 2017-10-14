@@ -15,12 +15,12 @@ Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
 
-from telegram import ReplyKeyboardMarkup, ParseMode, ChatAction, KeyboardButton
-from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
+from telegram             import ReplyKeyboardMarkup, ParseMode, ChatAction, KeyboardButton
+from telegram.ext         import (Updater, CommandHandler, MessageHandler, Filters,
                           RegexHandler, ConversationHandler)
-from datetime import datetime
-from subprocess import check_output
-from guess  import diagnostic
+from datetime             import datetime
+from subprocess           import check_output
+from guess                import diagnostic
 from hospital_recommender import near_specialist, get_city_name, city_exists
 
 import logging
@@ -33,7 +33,6 @@ level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 danger_cities = []
-
 LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER, ASK_NEAR, HOSPITAL_CHECKER = range(5)
 
 def error(bot, update, error):
@@ -129,10 +128,22 @@ def alerts_settings(bot, update, user_data):
 
 def near_hospitals(bot, update, user_data):
     if update.message.text == 'YES':
-        update.message.reply_text(
-            "Send me your ubication"
-        )
-        return
+        submit_keyboard = KeyboardButton(
+                            text="Submit your Location",
+                            request_location=True)
+
+        custom_keyboard = [[submit_keyboard]]
+        reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
+                                        one_time_keyboard=True)
+
+        bot.send_message(chat_id=update.message.chat_id,
+                         text = "You can either write down your city or send " +
+                         "a live location to find out nearby hospitals",
+                         reply_markup=reply_markup)
+
+
+
+        return HOSPITAL_CHECKER
 
     else:
         update.message.reply_text(
@@ -147,6 +158,8 @@ def locate_hospital(bot, update, user_data):
                                          lng=location.longitude,
                                          )
 
+        update.message.reply_text(near_hospitals[0]['name'])
+        bot.sendLocation(chat_id=update.message.chat_id,)
     else:
         update.message.reply_text(
             "Please, send your location by pressing the button"
