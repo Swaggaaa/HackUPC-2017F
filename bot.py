@@ -21,7 +21,8 @@ from telegram.ext         import (Updater, CommandHandler, MessageHandler, Filte
 from datetime             import datetime
 from subprocess           import check_output
 from guess                import diagnostic
-from hospital_recommender import near_specialist, get_city_name, city_exists
+from hospital_recommender import near_specialist
+#get_city_name, city_exists
 
 import logging
 
@@ -91,7 +92,7 @@ def infection_received(bot, update, user_data):
         )
     else:
         cityName = update.message.text
-        if (!city_exists(update.message.text)):
+        if(not city_exists(update.message.text)):
             update.message.reply_text("City not found. Please try again")
             return INFECTION_CHECKER
 
@@ -155,8 +156,10 @@ def locate_hospital(bot, update, user_data):
                                          lng=location.longitude,
                                          )
 
-        update.message.reply_text(near_hospitals[0]['name'])
-        bot.sendLocation(chat_id=update.message.chat_id,)
+        update.message.reply_text(near_hospitals[1]['name'])
+        print(type(near_hospitals[1]['location']['lat']))
+        bot.sendLocation(chat_id=update.message.chat_id,latitude=float(near_hospitals[1]['location']['lat']),
+                         longitude=float(near_hospitals[1]['location']['lng']))
     else:
         update.message.reply_text(
             "Please, send your location by pressing the button"
