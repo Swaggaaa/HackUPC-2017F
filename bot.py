@@ -21,7 +21,7 @@ from telegram.ext         import (Updater, CommandHandler, MessageHandler, Filte
 from datetime             import datetime
 from subprocess           import check_output
 from guess                import diagnostic
-from hospital_recommender import near_specialist
+from hospital_recommender import near_specialist, city_exists
 #get_city_name, city_exists
 
 import logging

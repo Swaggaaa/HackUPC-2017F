@@ -1,5 +1,5 @@
-from googleplaces import GooglePlaces, types, lang, GooglePlacesError
-
+from googleplaces    import GooglePlaces, types, lang, GooglePlacesError
+from geopy.geocoders import Nominatim
 YOUR_API_KEY = 'AIzaSyBDmWXiD0xaLmI9TCWowBShPRjzfynXMPY'
 
 
@@ -23,3 +23,7 @@ def near_specialist(lat,lng, key_words=None):
         if len(places)==3: break
         else: places.append(place2) # A dict matching the JSON response from Google.
     return places
+
+def city_exists(city):
+    geolocator = Nominatim()
+    return geolocator.geocode(city)!=None
