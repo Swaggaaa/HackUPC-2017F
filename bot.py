@@ -67,21 +67,20 @@ def input_received(bot, update, user_data):
         filename = filename.replace(' ', '')
         photo_file.download(filename)
         user_data['filename'] = filename
+        diagnose_on_course(bot, update, user_data)
     elif (update.message.location):
         #handle location shit
         kek = 1
     else:
         update.message.reply_text("I will cure u don't worry");
-        return LISTENING_FOR_INPUT
 
-    return DIAGNOSE_STARTED
+    return LISTENING_FOR_INPUT
 
 def diagnose_on_course(bot, update, user_data):
-    bot.send_chat_action(chat_id=update.message.chat_id,
-    action="Asking the doctor...")
-
+    #bot.send_chat_action(chat_id=update.message.chat_id,
+    #action="Asking the doctor...")
+    show_diagnose(bot, update, user_data)
     #check response
-    return DIAGNOSE_FINISHED
 
 def show_diagnose(bot, update, user_data):
     r = diagnostic(user_data['filename'])
@@ -111,7 +110,7 @@ def main():
                                               pass_user_data=True)],
 
             DIAGNOSE_FINISHED: [MessageHandler(Filters.text,
-                                              diagnose_finished,
+                                              show_diagnose,
                                               pass_user_data=True)],
         },
 
