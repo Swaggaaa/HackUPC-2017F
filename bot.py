@@ -34,8 +34,10 @@ level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 danger_cities = []
-alert_names = []
-LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER, ASK_NEAR, HOSPITAL_CHECKER = range(5)
+alert_users_cities = {}
+LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER, ASK_NEAR, \
+HOSPITAL_CHECKER, ALERTS_MODIFIER, ALERTS_LOCATION_ENABLE, \
+ALERTS_LOCATION_DISABLE = range(8)
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -55,29 +57,28 @@ def show_help(bot, update):
 
     return LISTENING_FOR_INPUT
 
+def display_menu_location(bot, update, to_what):
+    submit_keyboard = KeyboardButton(
+                        text="Submit your Location",
+                        request_location=True)
+
+    custom_keyboard = [[submit_keyboard]]
+    reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
+                                    one_time_keyboard=True)
+
+    bot.send_message(chat_id=update.message.chat_id,
+                     text = "You can either write down your city or send " +
+                     "a live location " + to_what,
+                     reply_markup=reply_markup)
+
+
 def input_received_diagnose(bot, update, user_data=""):
     update.message.reply_text("Send a photo or either describe your symptoms")
     return LISTENING_FOR_INPUT
 
 def input_received_infection(bot, update, user_data=""):
-    submit_keyboard = KeyboardButton(
-        text="Submit your Location",
-        request_location=True)
-
-    custom_keyboard = [[submit_keyboard]]
-    reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
-                                       one_time_keyboard=True)
-
-    bot.send_message(chat_id=update.message.chat_id,
-    text = "You can either write down your city or send " +
-    "a live location to find out nearby infections",
-    reply_markup=reply_markup)
-
+    display_menu_location(bot, update, "to submit the infection for that place")
     return INFECTION_CHECKER
-
-def check_infection(bot, update, user_data=""):
-
-    return LISTENING_FOR_INPUT
 
 def infection_received(bot, update, user_data):
     bot.send_chat_action(chat_id=update.message.chat_id,
@@ -122,28 +123,61 @@ def input_received(bot, update, user_data):
 
     return ASK_NEAR
 
+def input_received_alerts(bot, update, user_data):
+    custom_keyboard = [['Enable','Disable']]
+    reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
+                                       one_time_keyboard=True)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text="Do you want to set up alerts for Viral Infections" +
+                          "in your area?",
+                     reply_markup=reply_markup)
+    return ALERTS_MODIFIER
+
 def alerts_settings(bot, update, user_data):
-    pass
+    display_menu_location(bot,
+                          update,
+                          "to enable or disable alerts for that city")
+    if (update.message.text == 'Enable'):
+        return ALERTS_LOCATION_ENABLE
+
+    return ALERTS_LOCATION_DISABLE
+
+def alerts_location_enable(bot, update, user_data):
+    if (update.message.text and not check_exists(update.message.text)):
+        update.message.reply_text("Invalid city. Rewrite it or send it again")
+        return ALERTS_LOCATION_ENABLE
+
+    city_name = get_city_name(update.message.location) if update.message.location else update.message.text
+    if (city_name in alerts_users_cities):
+        alerts_users_cities[city_name].append(update.message.from_user.username)
+    else:
+        alerts_users_cities[city_name] = [update.message.from_user.username]
+
+    update.message.reply_text("Alerts enabled for user %s in city %s" %(
+                                update.message.from_user.username, city_name
+                                ))
+    return LISTENING_FOR_INPUT
+
+def alerts_location_disable(bot, update, user_data):
+    if (update.message.text and not check_exists(update.message.text)):
+        update.message.reply_text("Invalid city. Rewrite it or send it again")
+        return ALERTS_LOCATION_DISABLE
+
+    city_name = get_city_name(update.message.location) if update.message.location else update.message.text
+    if (not update.message.from_user.username in alert_users_cities[city_name]):
+        update.message.reply_text("You are already not receiving updates for " +
+        "that location")
+
+    alert_users_cities[city_name].remove(update.message.from_user.username)
+    update.message.reply_text("You have been removed from " + city_name)
+
+    return LISTENING_FOR_INPUT
+
 
 def near_hospitals(bot, update, user_data):
     if update.message.text == 'YES':
-        submit_keyboard = KeyboardButton(
-                            text="Submit your Location",
-                            request_location=True)
-
-        custom_keyboard = [[submit_keyboard]]
-        reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
-                                        one_time_keyboard=True)
-
-        bot.send_message(chat_id=update.message.chat_id,
-                         text = "You can either write down your city or send " +
-                         "a live location to find out nearby hospitals",
-                         reply_markup=reply_markup)
-
-
-
+        display_menu_location(bot, update, "to find out nearby medical centres")
         return HOSPITAL_CHECKER
-
     else:
         update.message.reply_text(
             "Thank you!"
@@ -151,21 +185,17 @@ def near_hospitals(bot, update, user_data):
         return LISTENING_FOR_INPUT
 
 def locate_hospital(bot, update, user_data):
-    if update.message.location:
-        location = update.message.location
-        near_hospitals = near_specialist(lat=location.latitude,
-                                         lng=location.longitude,
-                                         )
+    bot.send_chat_action(chat_id=update.message.chat_id,
+    action=ChatAction.FIND_LOCATION)
+    location = update.message.location if update.message.location else get_city_location(user.message.text)
 
-        update.message.reply_text(near_hospitals[1]['name'])
-        print(type(near_hospitals[1]['location']['lat']))
-        bot.sendLocation(chat_id=update.message.chat_id,latitude=float(near_hospitals[1]['location']['lat']),
-                         longitude=float(near_hospitals[1]['location']['lng']))
-    else:
-        update.message.reply_text(
-            "Please, send your location by pressing the button"
-        )
-        return ASK_NEAR
+    near_hospitals = near_specialist(lat=location.latitude,
+                                     lng=location.longitude,
+                                     )
+
+    update.message.reply_text(near_hospitals[1]['name'])
+    bot.sendLocation(chat_id=update.message.chat_id,latitude=float(near_hospitals[1]['location']['lat']),
+                     longitude=float(near_hospitals[1]['location']['lng']))
 
     return LISTENING_FOR_INPUT
 
@@ -206,14 +236,29 @@ def main():
                                                infection_received,
                                                pass_user_data=True)],
 
-            ASK_NEAR: [RegexHandler('^(YES| NO)$',
+            ASK_NEAR: [RegexHandler('^(YES|NO)$',
                                     near_hospitals,
                                     pass_user_data=True),
                       ],
 
-            HOSPITAL_CHECKER: [MessageHandler(Filters.location,
+            HOSPITAL_CHECKER: [MessageHandler(Filters.text | Filters.location,
                                                locate_hospital,
                                                pass_user_data=True)],
+
+            ALERTS_MODIFIER: [RegexHandler('^(Enable|Disable)$',
+                                            alerts_settings,
+                                            pass_user_data=True),
+                             ],
+
+            ALERTS_LOCATION_ENABLE: [MessageHandler(Filters.text | Filters.location,
+                                             alerts_location_enable,
+                                             pass_user_data=True),
+                              ],
+
+            ALERTS_LOCATION_DISABLE: [MessageHandler(Filters.text | Filters.location,
+                                                      alerts_location_disable,
+                                                      pass_user_data=True),
+                              ],
 
         },
 
@@ -223,7 +268,7 @@ def main():
     help_handler = CommandHandler('help', show_help)
     diagnose_handler = CommandHandler('diagnose', input_received_diagnose)
     infection_handler = CommandHandler('infection', input_received_infection)
-    alerts_handler = CommandHandler('alerts', alerts_settings)
+    alerts_handler = CommandHandler('alerts', input_received_alerts)
 
     dispatcher.add_handler(conversation_handler)
     dispatcher.add_handler(help_handler)
