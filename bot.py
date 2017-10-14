@@ -20,7 +20,7 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
                           RegexHandler, ConversationHandler)
 from datetime import datetime
 from subprocess import check_output
-from guess  import diagnositc
+from guess  import diagnostic
 
 import logging
 
