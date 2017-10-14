@@ -84,8 +84,11 @@ def diagnose_on_course(bot, update, user_data):
     return DIAGNOSE_FINISHED
 
 def show_diagnose(bot, update, user_data):
-    r = diagnositc(user_data['filename'])
-    update.message.reply_text("You have: " + r);
+    r = diagnostic(user_data['filename'])
+    if len(r) == 1:
+        update.message.reply_text("You have: " + r[0]);
+    else:
+        update.message.reply_text("You probably have " + r[0] + " or " + r[1])
     return LISTENING_FOR_INPUT
 
 def main():
