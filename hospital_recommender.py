@@ -16,9 +16,9 @@ def near_specialist(lat,lng, key_words=None):
 
     places = []
     for place in query_result.places:
-        place = {
+        place2 = {
             'name': place.name,
             'location': place.geo_location
         }
-        places.append(place) # A dict matching the JSON response from Google.
-    return places[:1]
+        places.append(place2) # A dict matching the JSON response from Google.
+    return places[:2]
