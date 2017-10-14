@@ -48,23 +48,23 @@ def read_tensor_from_image_file(file_name, input_height=224, input_width=224, in
     return result
 
 
-# load graph (previously retrained) and read image data
-# paths are hardcoded cuz ye
-graph = load_graph("tf_malalties/retrained_graph.pb")
-t = read_tensor_from_image_file(sys.argv[1])
+def diagnositc(filename):
+    # load graph (previously retrained) and read image data
+    # paths are hardcoded cuz ye
+    graph = load_graph("tf_malalties/retrained_graph.pb")
+    t = read_tensor_from_image_file(filename)
 
-# run the simulation and get the results
-input_name = "import/input"
-output_name = "import/final_result"
-input_operation = graph.get_operation_by_name(input_name);
-output_operation = graph.get_operation_by_name(output_name);
+    # run the simulation and get the results
+    input_name = "import/input"
+    output_name = "import/final_result"
+    input_operation = graph.get_operation_by_name(input_name);
+    output_operation = graph.get_operation_by_name(output_name);
 
-with tf.Session(graph=graph) as sess:
-    results = sess.run(output_operation.outputs[0], {input_operation.outputs[0]: t})
-results = np.squeeze(results)
+    with tf.Session(graph=graph) as sess:
+        results = sess.run(output_operation.outputs[0], {input_operation.outputs[0]: t})
+    results = np.squeeze(results)
 
-# sorted by most reasonable answer first
-top_k = results.argsort()[-5:][::-1]
-labels = load_labels("tf_malalties/retrained_labels.txt")
-for i in top_k:
-    print labels[i], results[i]
+    # sorted by most reasonable answer first
+    top_k = results.argsort()[-5:][::-1]
+    labels = load_labels("tf_malalties/retrained_labels.txt")
+    return labels[0]

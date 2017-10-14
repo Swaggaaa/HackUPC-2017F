@@ -20,6 +20,7 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
                           RegexHandler, ConversationHandler)
 from datetime import datetime
 from subprocess import check_output
+from guess  import diagnositc
 
 import logging
 
@@ -60,7 +61,8 @@ def input_received(bot, update, user_data):
         filename = '%s - %s.jpg'%(update.message.from_user.username, str(update.message.date).replace(':', ''))
         filename = filename.replace(' ', '')
         photo_file.download(filename)
-        print(check_output('python guess.py ' + filename, shell=True))
+        r = diagnositc(filename)
+        update.message.reply_text("You have: " + r);
     else:
         text = update.message.text
         update.message.reply_text("I will cure u don't worry");
