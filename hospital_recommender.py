@@ -30,8 +30,11 @@ def city_exists(city):
 
 def get_city_name(lat, lgt):
     geolocator = Nominatim()
-    location = geolocator.reverse("{}, {}".format(str(lat),
-                                                  str(lgt)
-                                                  ))
+    try:
+        location = geolocator.reverse("{}, {}".format(str(lat),
+                                                    str(lgt)
+                                                    ))
+    except:
+        return None
     return location.raw['address']['town']
 
