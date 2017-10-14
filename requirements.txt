@@ -2,3 +2,4 @@ tensorflow
 telegram
 python-telegram-bot
 geopy
+plotly
