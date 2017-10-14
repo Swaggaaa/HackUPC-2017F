@@ -15,12 +15,12 @@ Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
 
-from telegram import ReplyKeyboardMarkup, ParseMode, ChatAction, KeyboardButton
-from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
-                          RegexHandler, ConversationHandler)
-from datetime import datetime
-from subprocess import check_output
-from guess  import diagnostic
+from telegram            import ReplyKeyboardMarkup, ParseMode, ChatAction, KeyboardButton
+from telegram.ext        import (Updater, CommandHandler, MessageHandler, Filters,
+                                 RegexHandler, ConversationHandler)
+from datetime            import datetime
+from subprocess          import check_output
+from guess               import diagnostic
 from hospital_recomender import near_specialist
 
 import logging
@@ -115,6 +115,8 @@ def near_hospitals(bot, update, user_data):
         update.message.reply_text(
             "Send me your ubication"
         )
+
+
         return
 
     else:
