@@ -21,7 +21,7 @@ from telegram.ext        import (Updater, CommandHandler, MessageHandler, Filter
 from datetime            import datetime
 from subprocess          import check_output
 from guess               import diagnostic
-from hospital_recomender import near_specialist
+from hospital_recommender import near_specialist
 
 import logging
 
@@ -32,13 +32,8 @@ level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-<<<<<<< HEAD
 danger_cities = []
-
-LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER = range(3)
-=======
 LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER, ASK_NEAR, HOSPITAL_CHECKER = range(5)
->>>>>>> c6cca8e383d4305ec6ca24c508d43e07b4f16fc4
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -125,12 +120,22 @@ def alerts_settings(bot, update, user_data):
 
 def near_hospitals(bot, update, user_data):
     if update.message.text == 'YES':
-        update.message.reply_text(
-            "Send me your ubication"
-        )
+        submit_keyboard = KeyboardButton(
+                            text="Submit your Location",
+                            request_location=True)
+
+        custom_keyboard = [[submit_keyboard]]
+        reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
+                                        one_time_keyboard=True)
+
+        bot.send_message(chat_id=update.message.chat_id,
+                         text = "You can either write down your city or send " +
+                         "a live location to find out nearby hospitals",
+                         reply_markup=reply_markup)
 
 
-        return
+
+        return HOSPITAL_CHECKER
 
     else:
         update.message.reply_text(
@@ -144,10 +149,9 @@ def locate_hospital(bot, update, user_data):
         near_hospitals = near_specialist(lat=location.latitude,
                                          lng=location.longitude,
                                          )
-        print(near_hospitals)
-        update.message.reply_text(
-            "We have received your location"
-        )
+
+        update.message.reply_text(near_hospitals[0]['name'])
+        bot.sendLocation(chat_id=update.message.chat_id,)
     else:
         update.message.reply_text(
             "We didn't receive your location"
