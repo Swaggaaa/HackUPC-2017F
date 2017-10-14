@@ -21,7 +21,7 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
 from datetime import datetime
 from subprocess import check_output
 from guess  import diagnostic
-from hospital_recomender import near_specialist
+from hospital_recommender import near_specialist, get_city_name, city_exists
 
 import logging
 
@@ -32,13 +32,9 @@ level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-<<<<<<< HEAD
 danger_cities = []
 
-LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER = range(3)
-=======
 LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER, ASK_NEAR, HOSPITAL_CHECKER = range(5)
->>>>>>> c6cca8e383d4305ec6ca24c508d43e07b4f16fc4
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -87,15 +83,23 @@ def infection_received(bot, update, user_data):
     action=ChatAction.FIND_LOCATION)
 
     location = update.message.location
-    if (location):
-        coords = (location.longitude, location.latitude)
-        #tractar coords per convertir en area i guardar
-    else:
-        kek = 1
-        #convertir nom de ciutat a coords, i de coords a area
+    cityName = ""
 
-    #store the area in the global array
-    update.message.reply_text("Viral Infection submitted. Thank you!")
+    if (location):
+        cityName = get_city_name(
+            lat=location.latitude,
+            lng=location.longitude
+        )
+    else:
+        cityName = update.message.text
+        if (!city_exists(update.message.text)):
+            update.message.reply_text("City not found. Please try again")
+            return INFECTION_CHECKER
+
+    danger_cities.append(cityName)
+    update.message.reply_text("Viral Infection submitted for %s. Thank you!"%(
+                                cityName)
+    )
 
     return LISTENING_FOR_INPUT
 
@@ -142,16 +146,14 @@ def locate_hospital(bot, update, user_data):
         near_hospitals = near_specialist(lat=location.latitude,
                                          lng=location.longitude,
                                          )
-        print(near_hospitals)
-        update.message.reply_text(
-            "We have received your location"
-        )
+
     else:
         update.message.reply_text(
-            "We didn't receive your location"
+            "Please, send your location by pressing the button"
         )
-    return LISTENING_FOR_INPUT
+        return ASK_NEAR
 
+    return LISTENING_FOR_INPUT
 
 def diagnose_on_course(bot, update, user_data):
     bot.send_chat_action(chat_id=update.message.chat_id,
