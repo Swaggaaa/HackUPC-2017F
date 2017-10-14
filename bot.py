@@ -30,7 +30,7 @@ level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-LISTENING_FOR_INPUT, OPTION_CHOSEN, INPUT_RECEIVED, DIAGNOSE_STARTED, DIAGNOSE_FINISHED = range(5)
+LISTENING_FOR_INPUT, DIAGNOSE_STARTED, DIAGNOSE_FINISHED = range(3)
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -50,7 +50,12 @@ def show_help(bot, update):
     return LISTENING_FOR_INPUT
 
 def input_received_diagnose(bot, update, user_data):
-    update.message.reply_text("lmao");
+    update.message.reply_text("Send a photo or either describe your symptoms")
+    return LISTENING_FOR_INPUT
+
+def input_received_infection(bot, update, user_data):
+    update.message.reply_text("You can either write down your city or send " +
+    "a live location to find out nearby infections")
     return LISTENING_FOR_INPUT
 
 def input_received(bot, update, user_data):
@@ -61,10 +66,17 @@ def input_received(bot, update, user_data):
         filename = filename.replace(' ', '')
         photo_file.download(filename)
         print(check_output('python guess.py ' + filename, shell=True))
+    elif (update.message.location):
+
     else:
-        text = update.message.text
         update.message.reply_text("I will cure u don't worry");
     return DIAGNOSE_STARTED
+
+def diagnose_on_course(bot, update, user_data):
+    bot.send_chat_action(chat_id=update.message.chat_id,
+    action="Asking the doctor...")
+
+    #check response
 
 def main():
     #Set TOKEN
@@ -77,13 +89,14 @@ def main():
             [CommandHandler('start', show_help)],
 
         states={
-            LISTENING_FOR_INPUT: [MessageHandler(Filters.text | Filters.photo,
+            LISTENING_FOR_INPUT: [MessageHandler(Filters.text | Filters.photo | Filters.location,
                                                  input_received,
                                                  pass_user_data=True)],
 
             DIAGNOSE_STARTED: [MessageHandler(Filters.text,
-                                              input_received_diagnose,
+                                              diagnose_on_course,
                                               pass_user_data=True)],
+            ]
         },
 
         fallbacks=[RegexHandler('^Done$', show_help, pass_user_data=True)]
@@ -91,6 +104,7 @@ def main():
 
     help_handler = CommandHandler('help', show_help)
     diagnose_handler = CommandHandler('diagnose', input_received_diagnose)
+    infection_handler = CommandHandler('infection', input_received_infection)
 
     dispatcher.add_handler(conversation_handler);
     dispatcher.add_handler(help_handler);
