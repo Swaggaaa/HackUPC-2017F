@@ -15,7 +15,7 @@ Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
 
-from telegram import ReplyKeyboardMarkup, ParseMode, ChatAction
+from telegram import ReplyKeyboardMarkup, ParseMode, ChatAction, KeyboardButton
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
                           RegexHandler, ConversationHandler)
 from datetime import datetime
@@ -31,7 +31,7 @@ level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-LISTENING_FOR_INPUT, DIAGNOSE_STARTED, DIAGNOSE_FINISHED = range(3)
+LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER = range(3)
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -55,9 +55,21 @@ def input_received_diagnose(bot, update, user_data):
     return LISTENING_FOR_INPUT
 
 def input_received_infection(bot, update, user_data):
-    update.message.reply_text("You can either write down your city or send " +
-    "a live location to find out nearby infections")
+    location_keyboard = KeyboardButton(
+        text="send_location",
+        request_location=True)
+
+    reply_markup = ReplyKeyboardMarkup(location_keyboard)
+
+    bot.send_message(chat_id=update.message.chat_id,
+    text = "You can either write down your city or send " +
+    "a live location to find out nearby infections",
+    reply_markup=reply_markup)
+
     return LISTENING_FOR_INPUT
+
+def location_received(bot, update, user_data):
+
 
 def input_received(bot, update, user_data):
     if (update.message.photo):
@@ -85,9 +97,13 @@ def diagnose_on_course(bot, update, user_data):
 def show_diagnose(bot, update, user_data):
     r = diagnostic(user_data['filename'])
     if len(r) == 1:
-        update.message.reply_text("You have: " + r[0]);
+        update.message.reply_text("You have: " + r[0])
     else:
-        update.message.reply_text("You probably have " + r[0] + " or " + r[1])
+        update.message.reply_text(
+        "You probably have " + r[0] + " or " + r[1] + "\n",
+        "Answer a couple questions so we can diagnose you better: ")
+        return SYMPTOMS_CHECKER
+
     return LISTENING_FOR_INPUT
 
 def main():
@@ -105,13 +121,10 @@ def main():
                                                  input_received,
                                                  pass_user_data=True)],
 
-            DIAGNOSE_STARTED: [MessageHandler(Filters.text,
-                                              diagnose_on_course,
-                                              pass_user_data=True)],
+            INFECTION_CHECKER: [RegexHandler('^(Location)$',
+                                            location_received,
+                                            pass_user_data=True)],
 
-            DIAGNOSE_FINISHED: [MessageHandler(Filters.text,
-                                              show_diagnose,
-                                              pass_user_data=True)],
         },
 
         fallbacks=[RegexHandler('^Done$', show_help, pass_user_data=True)]
