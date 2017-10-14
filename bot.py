@@ -31,6 +31,8 @@ level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
+danger_cities = []
+
 LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER = range(3)
 
 def error(bot, update, error):
@@ -57,10 +59,10 @@ def input_received_diagnose(bot, update, user_data=""):
 
 def input_received_infection(bot, update, user_data=""):
     submit_keyboard = KeyboardButton(
-        text="Submit a Viral Infection in your Location",
+        text="Submit your Location",
         request_location=True)
 
-    custom_keyboard = [[location_keyboard]]
+    custom_keyboard = [[submit_keyboard]]
     reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
                                        one_time_keyboard=True)
 
@@ -75,13 +77,20 @@ def check_infection(bot, update, user_data=""):
 
     return LISTENING_FOR_INPUT
 
-def location_received(bot, update, user_data):
+def infection_received(bot, update, user_data):
     bot.send_chat_action(chat_id=update.message.chat_id,
     action=ChatAction.FIND_LOCATION)
 
-    #handle image upload
+    location = update.message.location
+    if (location):
+        coords = (location.longitude, location.latitude)
+        #tractar coords per convertir en area i guardar
+    else:
+        kek = 1
+        #convertir nom de ciutat a coords, i de coords a area
 
-    update.message.reply_text("You are safe.... for now")
+    #store the area in the global array
+    update.message.reply_text("Viral Infection submitted. Thank you!")
 
     return LISTENING_FOR_INPUT
 
@@ -136,8 +145,8 @@ def main():
                                                  input_received,
                                                  pass_user_data=True)],
 
-            INFECTION_CHECKER: [MessageHandler(Filters.location,
-                                               location_received,
+            INFECTION_CHECKER: [MessageHandler(Filters.text | Filters.location,
+                                               infection_received,
                                                pass_user_data=True)],
 
         },
