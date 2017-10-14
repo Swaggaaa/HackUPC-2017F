@@ -31,11 +31,7 @@ level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-<<<<<<< HEAD
 LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER = range(3)
-=======
-LISTENING_FOR_INPUT, SYMPTOMS_CHECKER = range(2)
->>>>>>> 453efaf9dad09a60f12bfce6dc14322e65efd33d
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -73,7 +69,12 @@ def input_received_infection(bot, update, user_data):
     return LISTENING_FOR_INPUT
 
 def location_received(bot, update, user_data):
+    bot.send_chat_action(chat_id=update.message.chat_id,
+    action=ChatAction.FIND_LOCATION)
 
+    update.message.reply_text("You are safe.... for now")
+
+    return LISTENING_FOR_INPUT
 
 def input_received(bot, update, user_data):
     if (update.message.photo):
@@ -85,8 +86,7 @@ def input_received(bot, update, user_data):
         user_data['filename'] = filename
         diagnose_on_course(bot, update, user_data)
     elif (update.message.location):
-        #handle location shit
-        kek = 1
+        location_received(bot, update, user_data)
     else:
         update.message.reply_text("I will cure u don't worry");
 
@@ -112,7 +112,7 @@ def show_diagnose(bot, update, user_data):
 
 def main():
     #Set TOKEN
-    updater = Updater('446652747:AAFsWZ2GhfjkIlcO_SPFTMWcBnVOFqQIA9c')
+    updater = Updater('468902066:AAEtfsuHosRJPKKk_VVrM87n7r3BegC3Yew')
 
     dispatcher = updater.dispatcher
 
@@ -125,15 +125,10 @@ def main():
                                                  input_received,
                                                  pass_user_data=True)],
 
-<<<<<<< HEAD
             INFECTION_CHECKER: [RegexHandler('^(Location)$',
                                             location_received,
                                             pass_user_data=True)],
 
-=======
-
-
->>>>>>> 453efaf9dad09a60f12bfce6dc14322e65efd33d
         },
 
         fallbacks=[RegexHandler('^Done$', show_help, pass_user_data=True)]
