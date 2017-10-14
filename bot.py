@@ -34,6 +34,7 @@ level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 danger_cities = []
+alert_names = []
 LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER, ASK_NEAR, HOSPITAL_CHECKER = range(5)
 
 def error(bot, update, error):
