@@ -18,6 +18,8 @@ bot.
 from telegram import ReplyKeyboardMarkup, ParseMode
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
                           RegexHandler, ConversationHandler)
+from datetime import datetime
+from subprocess import check_output
 
 import logging
 
@@ -52,8 +54,16 @@ def input_received_diagnose(bot, update, user_data):
     return LISTENING_FOR_INPUT
 
 def input_received(bot, update, user_data):
-    text = update.message.text
-    update.message.reply_text("I will cure u don't worry");
+    if (update.message.photo):
+        file_id = update.message.photo[-1].file_id
+        photo_file = bot.get_file(file_id)
+        filename = '%s - %s.jpg'%(update.message.from_user.username, str(update.message.date).replace(':', ''))
+        filename = filename.replace(' ', '')
+        photo_file.download(filename)
+        print(check_output('python guess.py ' + filename, shell=True))
+    else:
+        text = update.message.text
+        update.message.reply_text("I will cure u don't worry");
     return DIAGNOSE_STARTED
 
 def main():
