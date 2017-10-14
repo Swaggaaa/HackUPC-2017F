@@ -31,7 +31,7 @@ level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-LISTENING_FOR_INPUT, DIAGNOSE_STARTED, DIAGNOSE_FINISHED = range(3)
+LISTENING_FOR_INPUT, SYMPTOMS_CHECKER = range(2)
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -85,9 +85,13 @@ def diagnose_on_course(bot, update, user_data):
 def show_diagnose(bot, update, user_data):
     r = diagnostic(user_data['filename'])
     if len(r) == 1:
-        update.message.reply_text("You have: " + r[0]);
+        update.message.reply_text("You have: " + r[0])
     else:
-        update.message.reply_text("You probably have " + r[0] + " or " + r[1])
+        update.message.reply_text(
+        "You probably have " + r[0] + " or " + r[1] + "\n",
+        "Answer a couple questions so we can diagnose you better: ")
+        return SYMPTOMS_CHECKER
+
     return LISTENING_FOR_INPUT
 
 def main():
@@ -105,13 +109,8 @@ def main():
                                                  input_received,
                                                  pass_user_data=True)],
 
-            DIAGNOSE_STARTED: [MessageHandler(Filters.text,
-                                              diagnose_on_course,
-                                              pass_user_data=True)],
 
-            DIAGNOSE_FINISHED: [MessageHandler(Filters.text,
-                                              show_diagnose,
-                                              pass_user_data=True)],
+
         },
 
         fallbacks=[RegexHandler('^Done$', show_help, pass_user_data=True)]
