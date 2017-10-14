@@ -35,9 +35,7 @@ logger = logging.getLogger(__name__)
 
 danger_cities = []
 alert_users_cities = {}
-LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER, ASK_NEAR, \
-HOSPITAL_CHECKER, ALERTS_MODIFIER, ALERTS_LOCATION_ENABLE, \
-ALERTS_LOCATION_DISABLE = range(8)
+LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER, ASK_NEAR, HOSPITAL_CHECKER, ALERTS_MODIFIER, ALERTS_LOCATION_ENABLE, ALERTS_LOCATION_DISABLE = range(8)
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -229,9 +227,11 @@ def main():
 
     dispatcher = updater.dispatcher
 
+
     conversation_handler = ConversationHandler(
         entry_points=
             [CommandHandler('start', show_help)],
+
 
         states={
             LISTENING_FOR_INPUT: [MessageHandler(Filters.photo,
@@ -268,20 +268,15 @@ def main():
 
         },
 
-        fallbacks=[RegexHandler('^Done$', show_help, pass_user_data=True)]
+        fallbacks=[RegexHandler('^Done$', show_help, pass_user_data=True),
+                    CommandHandler('help', show_help),
+                    CommandHandler('diagnose', input_received_diagnose),
+                    CommandHandler('infection', input_received_infection),
+                    CommandHandler('alerts', input_received_alerts)]
     )
 
-    help_handler = CommandHandler('help', show_help)
-    diagnose_handler = CommandHandler('diagnose', input_received_diagnose)
-    infection_handler = CommandHandler('infection', input_received_infection)
-    alerts_handler = CommandHandler('alerts', input_received_alerts)
-
-    dispatcher.add_handler(conversation_handler)
-    dispatcher.add_handler(help_handler)
-    dispatcher.add_handler(diagnose_handler)
-    dispatcher.add_handler(infection_handler)
-    dispatcher.add_handler(alerts_handler)
     dispatcher.add_error_handler(error)
+    dispatcher.add_handler(conversation_handler)
     updater.start_polling()
 
     updater.idle()

@@ -1,9 +1,13 @@
 python -m scripts.retrain \
---bottleneck_dir=tf_malalties7/bottlenecks \
---how_many_training_steps=1000 \
---model_dir=tf_malalties7/models \
---summaries_dir=tf_malalties7/training_summaries/mobilenet_1.0_224 \
---output_graph=tf_malalties7/retrained_graph.pb \
---output_labels=tf_malalties7/retrained_labels.txt \
+--learning_rate=0.0001 \
+--bottleneck_dir=test_merged/bottlenecks \
+--how_many_training_steps=10000 \
+--model_dir=test_merged/models \
+--summaries_dir=test_merged/training_summaries/mobilenet_1.0_224 \
+--testing_percentage=20 \
+--validation_percentage=20 \
+--validation_batch_size=-1 \
+--output_graph=test_merged/retrained_graph_mobilenet.pb \
+--output_labels=test_merged/retrained_labels_mobilenet.txt \
 --architecture=mobilenet_1.0_224 \
---image_dir=malalties-03
+--image_dir=malalties_ferranquim
