@@ -21,6 +21,7 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
 from datetime import datetime
 from subprocess import check_output
 from guess  import diagnostic
+from hospital_recomender import near_specialist
 
 import logging
 
@@ -31,7 +32,7 @@ level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER = range(3)
+LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER, ASK_NEAR, HOSPITAL_CHECKER = range(5)
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -94,13 +95,49 @@ def input_received(bot, update, user_data):
         photo_file.download(filename)
         user_data['filename'] = filename
         diagnose_on_course(bot, update, user_data)
+        #update.message.reply_text("Do you want to find a medical center nearby?")
+        custom_keyboard = [['YES','NO']]
+        reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
+                                           one_time_keyboard=True)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Do you want to find a medical center nearby?",
+                         reply_markup=reply_markup)
     else:
         update.message.reply_text("I will cure u don't worry");
 
-    return LISTENING_FOR_INPUT
+    return ASK_NEAR
 
 def alerts_settings(bot, update, user_data):
+    pass
 
+def near_hospitals(bot, update, user_data):
+    if update.message.text == 'YES':
+        update.message.reply_text(
+            "Send me your ubication"
+        )
+        return
+
+    else:
+        update.message.reply_text(
+            "Thank you!"
+        )
+        return LISTENING_FOR_INPUT
+
+def locate_hospital(bot, update, user_data):
+    if update.message.location:
+        location = update.message.location
+        near_hospitals = near_specialist(lat=location.latitude,
+                                         lng=location.longitude,
+                                         )
+        print(near_hospitals)
+        update.message.reply_text(
+            "We have received your location"
+        )
+    else:
+        update.message.reply_text(
+            "We didn't receive your location"
+        )
+    return LISTENING_FOR_INPUT
 
 
 def diagnose_on_course(bot, update, user_data):
@@ -138,6 +175,15 @@ def main():
 
             INFECTION_CHECKER: [MessageHandler(Filters.location,
                                                location_received,
+                                               pass_user_data=True)],
+
+            ASK_NEAR: [RegexHandler('^(YES| NO)$',
+                                    near_hospitals,
+                                    pass_user_data=True),
+                      ],
+
+            HOSPITAL_CHECKER: [MessageHandler(Filters.location,
+                                               locate_hospital,
                                                pass_user_data=True)],
 
         },
