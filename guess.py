@@ -69,8 +69,6 @@ def diagnostic(filename):
     labels = load_labels("tf_malalties5/retrained_labels.txt")
     def_results = []
     def_results.append(labels[top_k[0]])
-    for i in top_k:
-        print labels[i], results[i]
     if results[top_k[0]] < 0.7:
         def_results.append(labels[top_k[1]])
     return def_results
