@@ -1,6 +1,9 @@
 import tensorflow as tf
 import sys
 import numpy as np
+import plotly.plotly as ply
+import plotly.graph_objs as go
+import datetime
 
 
 # usage: python guess.py <path_to_image>
@@ -49,6 +52,8 @@ def read_tensor_from_image_file(file_name, input_height=224, input_width=224, in
 
 
 def diagnostic(filename):
+    ply.sign_in('ferranconde', 'XL3PlhOhEHG8PzgxDNXC')
+
     # load graph (previously retrained) and read image data
     # paths are hardcoded cuz ye
     graph = load_graph("tf_malalties5/retrained_graph.pb")
@@ -71,4 +76,16 @@ def diagnostic(filename):
     def_results.append(labels[top_k[0]])
     if results[top_k[0]] < 0.7:
         def_results.append(labels[top_k[1]])
-    return def_results
+
+    # plotting pie chart
+    trace = go.Pie(labels=[labels[i] for i in top_k],
+                   values=[results[i]*100.0 for i in top_k],
+                   textinfo="label+percent",
+                   textfont=dict(size=42),
+                   marker=dict(colors=['#0080ff', '#3399ff', '#66b3ff', '#99ccff', '#cce6ff']))
+    layout = go.Layout(title='Prediction results', width=1000, height=1000)
+    fig = go.Figure(data=[trace], layout=layout)
+    pie_filename = "pred_results_" + str(datetime.datetime.now()).replace(' ', '_')
+    ply.image.save_as(fig, filename=pie_filename+'.png')
+
+    return def_results, pie_filename+'.png'

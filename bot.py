@@ -104,23 +104,20 @@ def infection_received(bot, update, user_data):
     return LISTENING_FOR_INPUT
 
 def input_received(bot, update, user_data):
-    if (update.message.photo):
-        file_id = update.message.photo[-1].file_id
-        photo_file = bot.get_file(file_id)
-        filename = '%s - %s.jpg'%(update.message.from_user.username, str(update.message.date).replace(':', ''))
-        filename = filename.replace(' ', '')
-        photo_file.download(filename)
-        user_data['filename'] = filename
-        diagnose_on_course(bot, update, user_data)
-        #update.message.reply_text("Do you want to find a medical center nearby?")
-        custom_keyboard = [['YES','NO']]
-        reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
-                                           one_time_keyboard=True)
-        bot.send_message(chat_id=update.message.chat_id,
-                         text="Do you want to find a medical center nearby?",
-                         reply_markup=reply_markup)
-    else:
-        update.message.reply_text("I will cure u don't worry");
+    file_id = update.message.photo[-1].file_id
+    photo_file = bot.get_file(file_id)
+    filename = '%s - %s.jpg'%(update.message.from_user.username, str(update.message.date).replace(':', ''))
+    filename = filename.replace(' ', '')
+    photo_file.download(filename)
+    user_data['filename'] = filename
+    diagnose_on_course(bot, update, user_data)
+    #update.message.reply_text("Do you want to find a medical center nearby?")
+    custom_keyboard = [['YES','NO']]
+    reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
+                                       one_time_keyboard=True)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text="Do you want to find a medical center nearby?",
+                     reply_markup=reply_markup)
 
     return ASK_NEAR
 
@@ -181,7 +178,7 @@ def diagnose_on_course(bot, update, user_data):
     #check response
 
 def show_diagnose(bot, update, user_data):
-    r = diagnostic(user_data['filename'])
+    r, chart_filename = diagnostic(user_data['filename'])
     if len(r) == 1:
         update.message.reply_text("You have: " + r[0])
     else:
@@ -203,7 +200,7 @@ def main():
             [CommandHandler('start', show_help)],
 
         states={
-            LISTENING_FOR_INPUT: [MessageHandler(Filters.text | Filters.photo,
+            LISTENING_FOR_INPUT: [MessageHandler(Filters.photo,
                                                  input_received,
                                                  pass_user_data=True)],
 
