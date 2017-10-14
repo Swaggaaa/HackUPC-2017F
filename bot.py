@@ -42,7 +42,8 @@ def show_help(bot, update):
     "You can input the following commands: \n"
     "/help -- Displays this text \n"
     "/diagnose -- Starts the diagnose procedure \n"
-    "/infection -- Starts the viral infection alert procedure \n"
+    "/infection -- Submit a viral infection in you area \n"
+    "/alerts -- Configure alerts for infections \n"
     "You can also either: \n"
     "- Send an [image]  -- Starts the diagnose procedure \n"
     "- Send a [location]  -- Starts the viral infection alert procedure",
@@ -50,27 +51,35 @@ def show_help(bot, update):
 
     return LISTENING_FOR_INPUT
 
-def input_received_diagnose(bot, update, user_data):
+def input_received_diagnose(bot, update, user_data=""):
     update.message.reply_text("Send a photo or either describe your symptoms")
     return LISTENING_FOR_INPUT
 
-def input_received_infection(bot, update, user_data):
-    location_keyboard = KeyboardButton(
-        text="send_location",
+def input_received_infection(bot, update, user_data=""):
+    submit_keyboard = KeyboardButton(
+        text="Submit a Viral Infection in your Location",
         request_location=True)
 
-    reply_markup = ReplyKeyboardMarkup(location_keyboard)
+    custom_keyboard = [[location_keyboard]]
+    reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
+                                       one_time_keyboard=True)
 
     bot.send_message(chat_id=update.message.chat_id,
     text = "You can either write down your city or send " +
     "a live location to find out nearby infections",
     reply_markup=reply_markup)
 
+    return INFECTION_CHECKER
+
+def check_infection(bot, update, user_data=""):
+
     return LISTENING_FOR_INPUT
 
 def location_received(bot, update, user_data):
     bot.send_chat_action(chat_id=update.message.chat_id,
     action=ChatAction.FIND_LOCATION)
+
+    #handle image upload
 
     update.message.reply_text("You are safe.... for now")
 
@@ -85,12 +94,14 @@ def input_received(bot, update, user_data):
         photo_file.download(filename)
         user_data['filename'] = filename
         diagnose_on_course(bot, update, user_data)
-    elif (update.message.location):
-        location_received(bot, update, user_data)
     else:
         update.message.reply_text("I will cure u don't worry");
 
     return LISTENING_FOR_INPUT
+
+def alerts_settings(bot, update, user_data):
+
+
 
 def diagnose_on_course(bot, update, user_data):
     bot.send_chat_action(chat_id=update.message.chat_id,
@@ -121,13 +132,13 @@ def main():
             [CommandHandler('start', show_help)],
 
         states={
-            LISTENING_FOR_INPUT: [MessageHandler(Filters.text | Filters.photo | Filters.location,
+            LISTENING_FOR_INPUT: [MessageHandler(Filters.text | Filters.photo,
                                                  input_received,
                                                  pass_user_data=True)],
 
-            INFECTION_CHECKER: [RegexHandler('^(Location)$',
-                                            location_received,
-                                            pass_user_data=True)],
+            INFECTION_CHECKER: [MessageHandler(Filters.location,
+                                               location_received,
+                                               pass_user_data=True)],
 
         },
 
@@ -137,11 +148,14 @@ def main():
     help_handler = CommandHandler('help', show_help)
     diagnose_handler = CommandHandler('diagnose', input_received_diagnose)
     infection_handler = CommandHandler('infection', input_received_infection)
+    alerts_handler = CommandHandler('alerts', alerts_settings)
 
-    dispatcher.add_handler(conversation_handler);
-    dispatcher.add_handler(help_handler);
-    dispatcher.add_handler(diagnose_handler);
-    dispatcher.add_error_handler(error);
+    dispatcher.add_handler(conversation_handler)
+    dispatcher.add_handler(help_handler)
+    dispatcher.add_handler(diagnose_handler)
+    dispatcher.add_handler(infection_handler)
+    dispatcher.add_handler(alerts_handler)
+    dispatcher.add_error_handler(error)
     updater.start_polling()
 
     updater.idle()
