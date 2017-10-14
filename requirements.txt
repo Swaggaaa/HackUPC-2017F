@@ -1,0 +1,3 @@
+tensorflow
+telegram
+python-telegram-bot

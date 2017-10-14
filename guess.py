@@ -51,7 +51,7 @@ def read_tensor_from_image_file(file_name, input_height=224, input_width=224, in
 def diagnostic(filename):
     # load graph (previously retrained) and read image data
     # paths are hardcoded cuz ye
-    graph = load_graph("tf_malalties/retrained_graph.pb")
+    graph = load_graph("tf_malalties5/retrained_graph.pb")
     t = read_tensor_from_image_file(filename)
 
     # run the simulation and get the results
@@ -66,11 +66,9 @@ def diagnostic(filename):
 
     # sorted by most reasonable answer first
     top_k = results.argsort()[-5:][::-1]
-    labels = load_labels("tf_malalties/retrained_labels.txt")
+    labels = load_labels("tf_malalties5/retrained_labels.txt")
     def_results = []
     def_results.append(labels[top_k[0]])
-    for i in top_k:
-        print labels[i], results[i]
     if results[top_k[0]] < 0.7:
         def_results.append(labels[top_k[1]])
     return def_results

@@ -31,7 +31,11 @@ level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
+<<<<<<< HEAD
 LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER = range(3)
+=======
+LISTENING_FOR_INPUT, SYMPTOMS_CHECKER = range(2)
+>>>>>>> 453efaf9dad09a60f12bfce6dc14322e65efd33d
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -108,7 +112,7 @@ def show_diagnose(bot, update, user_data):
 
 def main():
     #Set TOKEN
-    updater = Updater('468902066:AAEtfsuHosRJPKKk_VVrM87n7r3BegC3Yew')
+    updater = Updater('446652747:AAFsWZ2GhfjkIlcO_SPFTMWcBnVOFqQIA9c')
 
     dispatcher = updater.dispatcher
 
@@ -121,10 +125,15 @@ def main():
                                                  input_received,
                                                  pass_user_data=True)],
 
+<<<<<<< HEAD
             INFECTION_CHECKER: [RegexHandler('^(Location)$',
                                             location_received,
                                             pass_user_data=True)],
 
+=======
+
+
+>>>>>>> 453efaf9dad09a60f12bfce6dc14322e65efd33d
         },
 
         fallbacks=[RegexHandler('^Done$', show_help, pass_user_data=True)]
