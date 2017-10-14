@@ -27,3 +27,11 @@ def near_specialist(lat,lng, key_words=None):
 def city_exists(city):
     geolocator = Nominatim()
     return geolocator.geocode(city)!=None
+
+def get_city_name(lat, lgt):
+    geolocator = Nominatim()
+    location = geolocator.reverse("{}, {}".format(str(lat),
+                                                  str(lgt)
+                                                  ))
+    return location.raw['address']['town']
+
