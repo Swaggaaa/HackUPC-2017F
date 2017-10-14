@@ -21,7 +21,7 @@ from telegram.ext         import (Updater, CommandHandler, MessageHandler, Filte
 from datetime             import datetime
 from subprocess           import check_output
 from guess                import diagnostic
-from hospital_recommender import near_specialist
+from hospital_recommender import near_specialist, city_exists
 #get_city_name, city_exists
 
 import logging
@@ -123,17 +123,19 @@ def input_received(bot, update, user_data):
 
     return ASK_NEAR
 
-def input_received_alerts(bot, update, user_data):
+def input_received_alerts(bot, update, user_data=""):
     custom_keyboard = [['Enable','Disable']]
     reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
                                        one_time_keyboard=True)
     bot.send_message(chat_id=update.message.chat_id,
-                     text="Do you want to set up alerts for Viral Infections" +
-                          "in your area?",
+                     text="Do you want to set up alerts for Viral " \
+                          "Infections in your area?",
                      reply_markup=reply_markup)
+    print("input_received_alerts")
     return ALERTS_MODIFIER
 
 def alerts_settings(bot, update, user_data):
+    print("alerts_settings")
     display_menu_location(bot,
                           update,
                           "to enable or disable alerts for that city")
@@ -193,9 +195,13 @@ def locate_hospital(bot, update, user_data):
                                      lng=location.longitude,
                                      )
 
-    update.message.reply_text(near_hospitals[1]['name'])
-    bot.sendLocation(chat_id=update.message.chat_id,latitude=float(near_hospitals[1]['location']['lat']),
-                     longitude=float(near_hospitals[1]['location']['lng']))
+    update.message.reply_text("Here are some places, where you can go: ")
+    for near_hospital in near_hospitals:
+        update.message.reply_text(near_hospital['name'])
+        bot.sendLocation(chat_id=update.message.chat_id,
+                         latitude=float(near_hospital['location']['lat']),
+                         longitude=float(near_hospital['location']['lng'])
+                        )
 
     return LISTENING_FOR_INPUT
 
