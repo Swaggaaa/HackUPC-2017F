@@ -15,7 +15,7 @@ Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
 
-from telegram import ReplyKeyboardMarkup, ParseMode
+from telegram import ReplyKeyboardMarkup, ParseMode, ChatAction
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
                           RegexHandler, ConversationHandler)
 from datetime import datetime
@@ -77,8 +77,8 @@ def input_received(bot, update, user_data):
     return LISTENING_FOR_INPUT
 
 def diagnose_on_course(bot, update, user_data):
-    #bot.send_chat_action(chat_id=update.message.chat_id,
-    #action="Asking the doctor...")
+    bot.send_chat_action(chat_id=update.message.chat_id,
+    action=ChatAction.UPLOAD_PHOTO)
     show_diagnose(bot, update, user_data)
     #check response
 

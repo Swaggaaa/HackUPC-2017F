@@ -67,6 +67,10 @@ def diagnostic(filename):
     # sorted by most reasonable answer first
     top_k = results.argsort()[-5:][::-1]
     labels = load_labels("tf_malalties/retrained_labels.txt")
-    def_results = [labels[0]]
-    if results[0] < 0.7 and len(labels) > 1:
-        def_results.append(labels[1])
+    def_results = []
+    def_results.append(labels[top_k[0]])
+    for i in top_k:
+        print labels[i], results[i]
+    if results[top_k[0]] < 0.7:
+        def_results.append(labels[top_k[1]])
+    return def_results
