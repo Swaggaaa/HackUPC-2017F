@@ -175,7 +175,7 @@ def diagnose_on_course(bot, update, user_data):
     #check response
 
 def show_diagnose(bot, update, user_data):
-    r = diagnostic(user_data['filename'])
+    r, chart_filename = diagnostic(user_data['filename'])
     if len(r) == 1:
         update.message.reply_text("You have: " + r[0])
     else:
