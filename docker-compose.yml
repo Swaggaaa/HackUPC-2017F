@@ -1,0 +1,8 @@
+version: '2'
+
+services:
+    bot:
+      build: .
+      command: python bot.py
+      ports:
+        - "0:8888"

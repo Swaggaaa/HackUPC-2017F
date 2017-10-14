@@ -15,9 +15,12 @@ Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
 
-from telegram import ReplyKeyboardMarkup, ParseMode
+from telegram import ReplyKeyboardMarkup, ParseMode, ChatAction
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
                           RegexHandler, ConversationHandler)
+from datetime import datetime
+from subprocess import check_output
+from guess  import diagnostic
 
 import logging
 
@@ -28,7 +31,7 @@ level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-LISTENING_FOR_INPUT, OPTION_CHOSEN, INPUT_RECEIVED, DIAGNOSE_STARTED, DIAGNOSE_FINISHED = range(5)
+LISTENING_FOR_INPUT, SYMPTOMS_CHECKER = range(2)
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -48,17 +51,52 @@ def show_help(bot, update):
     return LISTENING_FOR_INPUT
 
 def input_received_diagnose(bot, update, user_data):
-    update.message.reply_text("lmao");
+    update.message.reply_text("Send a photo or either describe your symptoms")
+    return LISTENING_FOR_INPUT
+
+def input_received_infection(bot, update, user_data):
+    update.message.reply_text("You can either write down your city or send " +
+    "a live location to find out nearby infections")
     return LISTENING_FOR_INPUT
 
 def input_received(bot, update, user_data):
-    text = update.message.text
-    update.message.reply_text("I will cure u don't worry");
-    return DIAGNOSE_STARTED
+    if (update.message.photo):
+        file_id = update.message.photo[-1].file_id
+        photo_file = bot.get_file(file_id)
+        filename = '%s - %s.jpg'%(update.message.from_user.username, str(update.message.date).replace(':', ''))
+        filename = filename.replace(' ', '')
+        photo_file.download(filename)
+        user_data['filename'] = filename
+        diagnose_on_course(bot, update, user_data)
+    elif (update.message.location):
+        #handle location shit
+        kek = 1
+    else:
+        update.message.reply_text("I will cure u don't worry");
+
+    return LISTENING_FOR_INPUT
+
+def diagnose_on_course(bot, update, user_data):
+    bot.send_chat_action(chat_id=update.message.chat_id,
+    action=ChatAction.UPLOAD_PHOTO)
+    show_diagnose(bot, update, user_data)
+    #check response
+
+def show_diagnose(bot, update, user_data):
+    r = diagnostic(user_data['filename'])
+    if len(r) == 1:
+        update.message.reply_text("You have: " + r[0])
+    else:
+        update.message.reply_text(
+        "You probably have " + r[0] + " or " + r[1] + "\n",
+        "Answer a couple questions so we can diagnose you better: ")
+        return SYMPTOMS_CHECKER
+
+    return LISTENING_FOR_INPUT
 
 def main():
     #Set TOKEN
-    updater = Updater('468902066:AAEtfsuHosRJPKKk_VVrM87n7r3BegC3Yew')
+    updater = Updater('446652747:AAFsWZ2GhfjkIlcO_SPFTMWcBnVOFqQIA9c')
 
     dispatcher = updater.dispatcher
 
@@ -67,13 +105,12 @@ def main():
             [CommandHandler('start', show_help)],
 
         states={
-            LISTENING_FOR_INPUT: [MessageHandler(Filters.text | Filters.photo,
+            LISTENING_FOR_INPUT: [MessageHandler(Filters.text | Filters.photo | Filters.location,
                                                  input_received,
                                                  pass_user_data=True)],
 
-            DIAGNOSE_STARTED: [MessageHandler(Filters.text,
-                                              input_received_diagnose,
-                                              pass_user_data=True)],
+
+
         },
 
         fallbacks=[RegexHandler('^Done$', show_help, pass_user_data=True)]
@@ -81,6 +118,7 @@ def main():
 
     help_handler = CommandHandler('help', show_help)
     diagnose_handler = CommandHandler('diagnose', input_received_diagnose)
+    infection_handler = CommandHandler('infection', input_received_infection)
 
     dispatcher.add_handler(conversation_handler);
     dispatcher.add_handler(help_handler);
