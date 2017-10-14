@@ -66,10 +66,14 @@ def input_received(bot, update, user_data):
         filename = '%s - %s.jpg'%(update.message.from_user.username, str(update.message.date).replace(':', ''))
         filename = filename.replace(' ', '')
         photo_file.download(filename)
-        r = diagnositc(filename)
-        update.message.reply_text("You have: " + r);
+        user_data['filename'] = filename
+    elif (update.message.location):
+        #handle location shit
+        kek = 1
     else:
         update.message.reply_text("I will cure u don't worry");
+        return LISTENING_FOR_INPUT
+
     return DIAGNOSE_STARTED
 
 def diagnose_on_course(bot, update, user_data):
@@ -77,6 +81,12 @@ def diagnose_on_course(bot, update, user_data):
     action="Asking the doctor...")
 
     #check response
+    return DIAGNOSE_FINISHED
+
+def show_diagnose(bot, update, user_data):
+    r = diagnositc(user_data['filename'])
+    update.message.reply_text("You have: " + r);
+    return LISTENING_FOR_INPUT
 
 def main():
     #Set TOKEN
@@ -96,7 +106,10 @@ def main():
             DIAGNOSE_STARTED: [MessageHandler(Filters.text,
                                               diagnose_on_course,
                                               pass_user_data=True)],
-            ]
+
+            DIAGNOSE_FINISHED: [MessageHandler(Filters.text,
+                                              diagnose_finished,
+                                              pass_user_data=True)],
         },
 
         fallbacks=[RegexHandler('^Done$', show_help, pass_user_data=True)]
