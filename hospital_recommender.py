@@ -1,6 +1,6 @@
 from googleplaces    import GooglePlaces, types, lang, GooglePlacesError
 from geopy.geocoders import Nominatim
-YOUR_API_KEY = 'AIzaSyBDmWXiD0xaLmI9TCWowBShPRjzfynXMPY'
+YOUR_API_KEY = 'i give u 20k gp for gf'
 
 
 def near_specialist(lat,lng, key_words=None):

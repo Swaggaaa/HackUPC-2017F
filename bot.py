@@ -328,7 +328,7 @@ def show_diagnose(bot, update, user_data):
 
 def main():
     #Set TOKEN
-    updater = Updater('417439438:AAHmj9RPgHYYEqXOdhahMTZEkBeBNeVN6T0')
+    updater = Updater('hi im an api key lmao')
 
     dispatcher = updater.dispatcher
 

@@ -52,11 +52,11 @@ def read_tensor_from_image_file(file_name, input_height=224, input_width=224, in
 
 
 def diagnostic(filename):
-    ply.sign_in('ferranconde', 'XL3PlhOhEHG8PzgxDNXC')
+    ply.sign_in('press 123 for gf', '1232131231231231231213')
 
     # load graph (previously retrained) and read image data
     # paths are hardcoded cuz ye
-    graph = load_graph("tf_malalties5/retrained_graph.pb")
+    graph = load_graph("test_merged/retrained_graph_mobilenet.pb")
     t = read_tensor_from_image_file(filename)
 
     # run the simulation and get the results
@@ -71,7 +71,7 @@ def diagnostic(filename):
 
     # sorted by most reasonable answer first
     top_k = results.argsort()[-5:][::-1]
-    labels = load_labels("tf_malalties5/retrained_labels.txt")
+    labels = load_labels("test_merged/retrained_labels_mobilenet.txt")
     def_results = []
     def_results.append(labels[top_k[0]])
     if results[top_k[0]] < 0.7:
