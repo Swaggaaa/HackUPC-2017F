@@ -278,8 +278,9 @@ def diagnose_on_course(bot, update, user_data):
 def show_diagnose(bot, update, user_data):
     r, chart_filename = diagnostic(user_data['filename'])
 
+    r = [i.replace(' ', '') for i in r]
     if len(r) == 1:
-        if r[0] == "perfectsmile" or r[0] == "good eye":
+        if r[0] == "perfectsmile" or r[0] == "goodeye":
             update.message.reply_text("Congratulations! You are <b>Healthy</b>.",
                                     parse_mode=ParseMode.HTML)
             return False
@@ -291,17 +292,17 @@ def show_diagnose(bot, update, user_data):
 
         update.message.reply_text("The suggested treatment for %s is:\n%s" %(r[0], treatments[r[0]]))
     else:
-        if r[0] == "perfectsmile" or r[0] == "good eye" or \
-        r[1] == "perfectsmile" or r[1] == "good eye":
-            if (r[0] == "perfectsmile" and r[1] == "good eye") or \
-            r[1] == "perfectsmile" and r[1] == "good eye":
+        if r[0] == "perfectsmile" or r[0] == "goodeye" or \
+        r[1] == "perfectsmile" or r[1] == "goodeye":
+            if (r[0] == "perfectsmile" and r[1] == "goodeye") or \
+            r[1] == "perfectsmile" and r[1] == "goodeye":
                 update.message.reply_text("Congratulations! You are <b>Healthy</b>.",
                                         parse_mode=ParseMode.HTML
                 )
                 return True
 
             bad_thing = ""
-            if r[0] == "perfectsmile" or r[0] == "good eye":
+            if r[0] == "perfectsmile" or r[0] == "goodeye":
                 bad_thing = r[1]
             else:
                 bad_thing = r[0]
