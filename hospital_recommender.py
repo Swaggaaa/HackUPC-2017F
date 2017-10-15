@@ -38,3 +38,6 @@ def get_city_name(lat, lgt):
         return None
     return location.raw['address']['town']
 
+def get_city_location(city):
+    geolocator = Nominatim()
+    return geolocator.geocode(city)
