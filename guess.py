@@ -52,7 +52,7 @@ def read_tensor_from_image_file(file_name, input_height=224, input_width=224, in
 
 
 def diagnostic(filename):
-    ply.sign_in('ferranconde', 'XL3PlhOhEHG8PzgxDNXC')
+    ply.sign_in('press 123 for gf', '1232131231231231231213')
 
     # load graph (previously retrained) and read image data
     # paths are hardcoded cuz ye
