@@ -122,16 +122,19 @@ def input_received(bot, update, user_data):
     filename = filename.replace(' ', '')
     photo_file.download(filename)
     user_data['filename'] = filename
-    diagnose_on_course(bot, update, user_data)
+    healthy = not diagnose_on_course(bot, update, user_data)
     #update.message.reply_text("Do you want to find a medical center nearby?")
-    custom_keyboard = [['YES','NO']]
-    reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
-                                       one_time_keyboard=True)
-    bot.send_message(chat_id=update.message.chat_id,
-                     text="Do you want to find a medical center nearby?",
-                     reply_markup=reply_markup)
+    if (not healthy):
+        custom_keyboard = [['YES','NO']]
+        reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
+                                          one_time_keyboard=True)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Do you want to find a medical center nearby?",
+                         reply_markup=reply_markup)
 
-    return ASK_NEAR
+        return ASK_NEAR
+
+    return LISTENING_FOR_INPUT
 
 def input_received_alerts(bot, update, user_data=""):
     custom_keyboard = [['Enable','Disable']]
@@ -226,20 +229,31 @@ def locate_hospital(bot, update, user_data):
 def diagnose_on_course(bot, update, user_data):
     bot.send_chat_action(chat_id=update.message.chat_id,
     action=ChatAction.UPLOAD_PHOTO)
-    show_diagnose(bot, update, user_data)
+    return show_diagnose(bot, update, user_data)
     #check response
 
 def show_diagnose(bot, update, user_data):
     r, chart_filename = diagnostic(user_data['filename'])
+
     if len(r) == 1:
-        update.message.reply_text("You have: " + r[0])
+        if r[0] == "perfect smile" or r[0] == "good eye":
+            update.message.reply_text("Congratulations! You are <b>Healthy</b>",
+                                    parse_mode=ParseMode.HTML)
+            return False
+
+        update.message.reply_text("You have been diagnosed with <b>" + r[0] +
+                                  "</b>.",
+                                  parse_mode='HTML')
+
+        f = open(chart_filename, 'rb')
+        bot.send_photo(chat_id=update.message.chat_id,
+                       photo=f)
     else:
         update.message.reply_text(
-        "You probably have " + r[0] + " or " + r[1] + "\n",
-        "Answer a couple questions so we can diagnose you better: ")
-        return SYMPTOMS_CHECKER
+        "You probably have " + r[0] + " or " + r[1] + "\n"
+        )
 
-    return LISTENING_FOR_INPUT
+    return True
 
 def main():
     #Set TOKEN
