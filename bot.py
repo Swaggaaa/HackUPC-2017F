@@ -21,8 +21,8 @@ from telegram.ext         import (Updater, CommandHandler, MessageHandler, Filte
 from datetime             import datetime
 from subprocess           import check_output
 from guess                import diagnostic
-from hospital_recommender import near_specialist, city_exists
-#get_city_name, city_exists
+from hospital_recommender import (near_specialist, city_exists, get_city_name,
+                          get_city_location)
 
 import logging
 
@@ -83,23 +83,35 @@ def infection_received(bot, update, user_data):
     action=ChatAction.FIND_LOCATION)
 
     location = update.message.location
-    cityName = ""
+    city_name = ""
 
     if (location):
-        cityName = get_city_name(
+        city_name = get_city_name(
             lat=location.latitude,
             lng=location.longitude
         )
     else:
-        cityName = update.message.text
+        city_name = update.message.text
         if(not city_exists(update.message.text)):
             update.message.reply_text("City not found. Please try again")
             return INFECTION_CHECKER
 
-    danger_cities.append(cityName)
-    update.message.reply_text("Viral Infection submitted for %s. Thank you!"%(
-                                cityName)
-    )
+    if (not city_name in danger_cities):
+        danger_cities.append(city_name)
+        update.message.reply_text("Viral Infection submitted for " + city_name +
+                                  ". Thank you!"
+                                 )
+        for chat_id in alert_users_cities[city_name]:
+            bot.send_message(chat_id=chat_id,
+                             text="<b>NEW INFECTION</b> IN <b>" +
+                                   city_name + "</b>",
+                             parse_mode=ParseMode.HTML
+                            )
+    else:
+        update.message.reply_text("A Viral Infection already exists for " +
+                                   city_name + "."
+                                 )
+
 
     return LISTENING_FOR_INPUT
 
@@ -129,11 +141,9 @@ def input_received_alerts(bot, update, user_data=""):
                      text="Do you want to set up alerts for Viral " \
                           "Infections in your area?",
                      reply_markup=reply_markup)
-    print("input_received_alerts")
     return ALERTS_MODIFIER
 
 def alerts_settings(bot, update, user_data):
-    print("alerts_settings")
     display_menu_location(bot,
                           update,
                           "to enable or disable alerts for that city")
@@ -143,15 +153,21 @@ def alerts_settings(bot, update, user_data):
     return ALERTS_LOCATION_DISABLE
 
 def alerts_location_enable(bot, update, user_data):
-    if (update.message.text and not check_exists(update.message.text)):
+    if (update.message.text and not city_exists(update.message.text)):
         update.message.reply_text("Invalid city. Rewrite it or send it again")
         return ALERTS_LOCATION_ENABLE
 
-    city_name = get_city_name(update.message.location) if update.message.location else update.message.text
-    if (city_name in alerts_users_cities):
-        alerts_users_cities[city_name].append(update.message.from_user.username)
+    city_name = get_city_name(lgt=update.message.location.longitude,
+                              lat=update.message.location.latitude) if update.message.location else update.message.text
+    if (city_name in alert_users_cities):
+        if (update.message.chat_id in alert_users_cities[city_name]):
+            update.message.reply_text("You are already receiving updates for " +
+            "that location")
+            return LISTENING_FOR_INPUT
+
+        alert_users_cities[city_name].append(update.message.chat_id)
     else:
-        alerts_users_cities[city_name] = [update.message.from_user.username]
+        alert_users_cities[city_name] = [update.message.chat_id]
 
     update.message.reply_text("Alerts enabled for user %s in city %s" %(
                                 update.message.from_user.username, city_name
@@ -159,16 +175,19 @@ def alerts_location_enable(bot, update, user_data):
     return LISTENING_FOR_INPUT
 
 def alerts_location_disable(bot, update, user_data):
-    if (update.message.text and not check_exists(update.message.text)):
+    if (update.message.text and not city_exists(update.message.text)):
         update.message.reply_text("Invalid city. Rewrite it or send it again")
         return ALERTS_LOCATION_DISABLE
 
-    city_name = get_city_name(update.message.location) if update.message.location else update.message.text
-    if (not update.message.from_user.username in alert_users_cities[city_name]):
+    city_name = get_city_name(lgt=update.message.location.longitude,
+                              lat=update.message.location.latitude) if update.message.location else update.message.text
+    if (not city_name in alert_users_cities or
+    not update.message.chat_id in alert_users_cities[city_name]):
         update.message.reply_text("You are already not receiving updates for " +
         "that location")
+        return LISTENING_FOR_INPUT
 
-    alert_users_cities[city_name].remove(update.message.from_user.username)
+    alert_users_cities[city_name].remove(update.message.chat_id)
     update.message.reply_text("You have been removed from " + city_name)
 
     return LISTENING_FOR_INPUT
@@ -187,7 +206,8 @@ def near_hospitals(bot, update, user_data):
 def locate_hospital(bot, update, user_data):
     bot.send_chat_action(chat_id=update.message.chat_id,
     action=ChatAction.FIND_LOCATION)
-    location = update.message.location if update.message.location else get_city_location(user.message.text)
+    location = update.message.location if update.message.location else \
+               get_city_location(update.message.text)
 
     near_hospitals = near_specialist(lat=location.latitude,
                                      lng=location.longitude,

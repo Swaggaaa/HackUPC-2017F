@@ -36,7 +36,12 @@ def get_city_name(lat, lgt):
                                                     ))
     except:
         return None
-    return location.raw['address']['town']
+    if 'town' in location.raw['address']:
+        return location.raw['address']['town']
+    elif 'city' in location.raw['address']:
+        return location.raw['address']['city']
+
+    return None
 
 def get_city_location(city):
     geolocator = Nominatim()
