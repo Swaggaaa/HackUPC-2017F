@@ -119,19 +119,25 @@ def infection_received(bot, update, user_data):
     if (location):
         city_name = get_city_name(
             lat=location.latitude,
-            lng=location.longitude
+            lgt=location.longitude
         )
     else:
         city_name = update.message.text
-        if(not city_exists(update.message.text)):
+
+        if not city_exists(update.message.text):
             update.message.reply_text("City not found. Please try again.")
             return INFECTION_CHECKER
+
 
     if (not city_name in danger_cities):
         danger_cities.append(city_name)
         update.message.reply_text("Viral Infection submitted for " + city_name +
                                   ". Thank you!"
                                  )
+
+        if not city_name in alert_users_cities:
+            return LISTENING_FOR_INPUT
+
         for chat_id in alert_users_cities[city_name]:
             bot.send_message(chat_id=chat_id,
                              text="<b>NEW INFECTION</b> IN <b>" +
@@ -149,7 +155,7 @@ def infection_received(bot, update, user_data):
 def input_received(bot, update, user_data):
     file_id = update.message.photo[-1].file_id
     photo_file = bot.get_file(file_id)
-    filename = '%s - %s.jpg'%(update.message.from_user.username, str(update.message.date).replace(':', ''))
+    filename = '%s - %s.jpg'%(update.message.from_user.first_name, str(update.message.date).replace(':', ''))
     filename = filename.replace(' ', '')
     photo_file.download(filename)
     user_data['filename'] = filename
@@ -204,8 +210,14 @@ def alerts_location_enable(bot, update, user_data):
         alert_users_cities[city_name] = [update.message.chat_id]
 
     update.message.reply_text("Alerts enabled for user %s in city %s." %(
-                                update.message.from_user.username, city_name
+                                update.message.from_user.first_name, city_name
                                 ))
+    if city_name in danger_cities:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="<b>EXISTING INFECTION</b> IN <b>" +
+                               city_name + "</b>.",
+                         parse_mode=ParseMode.HTML
+                        )
     return LISTENING_FOR_INPUT
 
 def alerts_location_disable(bot, update, user_data):
@@ -215,7 +227,7 @@ def alerts_location_disable(bot, update, user_data):
 
     city_name = get_city_name(lgt=update.message.location.longitude,
                               lat=update.message.location.latitude) if update.message.location else update.message.text
-    if (not city_name in alert_users_cities or
+    if (not city_name in alert_users_cities or \
     not update.message.chat_id in alert_users_cities[city_name]):
         update.message.reply_text("You are already not receiving updates for " +
         "that location.")
