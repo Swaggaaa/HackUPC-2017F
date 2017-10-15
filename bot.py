@@ -37,20 +37,51 @@ danger_cities = []
 alert_users_cities = {}
 LISTENING_FOR_INPUT, SYMPTOMS_CHECKER, INFECTION_CHECKER, ASK_NEAR, HOSPITAL_CHECKER, ALERTS_MODIFIER, ALERTS_LOCATION_ENABLE, ALERTS_LOCATION_DISABLE = range(8)
 
+treatments = {'cavity' : """- Fluoride treatments: If your cavity just started, a fluoride treatment may help restore your tooth's enamel and can sometimes reverse a cavity in the very early stages.
+- Fillings (restorations): fillings are the main treatment option when decay has progressed beyond the earliest stage. They are made of various materials.
+- Tooth extractions: Some teeth become so severely decayed that they can't be restored and must be removed. Having a tooth pulled can leave a gap that allows your other teeth to shift. If possible, consider getting a bridge or a dental implant to replace the missing tooth.""",
+
+'cataract' : """Risk of cataracts can be increased by:
+- inherited genetic disorders
+- diabetes
+- smoking
+- long-term use of steroids
+- obesity
+- previous eye surgeries
+- drinking excessive amounts of alcohol.
+
+If you experience any changes in your vision, make an appointment for an eye exam.""",
+
+'conjunctivitis' : """Conjunctivitis can be caused by exposure to something for which you have an allergy,
+and also by exposure to someone infected of viral/bacterial conjunctivitis.
+Usage of extended-wear contact lenses is a risk factor as well.
+
+You will be advised to stop wearing contact lenses if you wear them.
+Disinfect hard lenses overnight before you reuse them.
+Your doctor could prescribe some type of eyedrops if your conjunctivitis is caused from an allergy.""",
+
+'sty' : """Styes are often caused by bacteria infection.
+To avoid this, you should not:
+
+- Touch your eyes with unwashed hands
+- Insert your contact lenses without correctly disinfecting them
+- Leave on eye makeup overnight
+
+Your doctor could prescribe you antibiotic eyedrops or a topical antibiotic cream.
+In severe cases, these antibiotics may come in tablet or pill form."""}
+
+
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
 
 def show_help(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
-    text='Hi! Welcome to <b>Autism detector</b>. You probably have autism tbh.\n'
+    text='Hi! Welcome to <b>First AId</b>.\n'
     "You can input the following commands: \n"
     "/help -- Displays this text \n"
     "/diagnose -- Starts the diagnose procedure \n"
     "/infection -- Submit a viral infection in you area \n"
-    "/alerts -- Configure alerts for infections \n"
-    "You can also either: \n"
-    "- Send an [image]  -- Starts the diagnose procedure \n"
-    "- Send a [location]  -- Starts the viral infection alert procedure",
+    "/alerts -- Configure alerts for infections \n",
     parse_mode=ParseMode.HTML)
 
     return LISTENING_FOR_INPUT
@@ -71,11 +102,11 @@ def display_menu_location(bot, update, to_what):
 
 
 def input_received_diagnose(bot, update, user_data=""):
-    update.message.reply_text("Send a photo or either describe your symptoms")
+    update.message.reply_text("Send a photo so I can assist you.")
     return LISTENING_FOR_INPUT
 
 def input_received_infection(bot, update, user_data=""):
-    display_menu_location(bot, update, "to submit the infection for that place")
+    display_menu_location(bot, update, "to submit the infection for that place.")
     return INFECTION_CHECKER
 
 def infection_received(bot, update, user_data):
@@ -93,7 +124,7 @@ def infection_received(bot, update, user_data):
     else:
         city_name = update.message.text
         if(not city_exists(update.message.text)):
-            update.message.reply_text("City not found. Please try again")
+            update.message.reply_text("City not found. Please try again.")
             return INFECTION_CHECKER
 
     if (not city_name in danger_cities):
@@ -104,7 +135,7 @@ def infection_received(bot, update, user_data):
         for chat_id in alert_users_cities[city_name]:
             bot.send_message(chat_id=chat_id,
                              text="<b>NEW INFECTION</b> IN <b>" +
-                                   city_name + "</b>",
+                                   city_name + "</b>.",
                              parse_mode=ParseMode.HTML
                             )
     else:
@@ -125,7 +156,7 @@ def input_received(bot, update, user_data):
     healthy = not diagnose_on_course(bot, update, user_data)
     #update.message.reply_text("Do you want to find a medical center nearby?")
     if (not healthy):
-        custom_keyboard = [['YES','NO']]
+        custom_keyboard = [['Yes','No']]
         reply_markup = ReplyKeyboardMarkup(keyboard=custom_keyboard,
                                           one_time_keyboard=True)
         bot.send_message(chat_id=update.message.chat_id,
@@ -149,7 +180,7 @@ def input_received_alerts(bot, update, user_data=""):
 def alerts_settings(bot, update, user_data):
     display_menu_location(bot,
                           update,
-                          "to enable or disable alerts for that city")
+                          "to enable or disable alerts for that city.")
     if (update.message.text == 'Enable'):
         return ALERTS_LOCATION_ENABLE
 
@@ -157,7 +188,7 @@ def alerts_settings(bot, update, user_data):
 
 def alerts_location_enable(bot, update, user_data):
     if (update.message.text and not city_exists(update.message.text)):
-        update.message.reply_text("Invalid city. Rewrite it or send it again")
+        update.message.reply_text("Invalid city. Rewrite it or send it again.")
         return ALERTS_LOCATION_ENABLE
 
     city_name = get_city_name(lgt=update.message.location.longitude,
@@ -165,21 +196,21 @@ def alerts_location_enable(bot, update, user_data):
     if (city_name in alert_users_cities):
         if (update.message.chat_id in alert_users_cities[city_name]):
             update.message.reply_text("You are already receiving updates for " +
-            "that location")
+            "that location.")
             return LISTENING_FOR_INPUT
 
         alert_users_cities[city_name].append(update.message.chat_id)
     else:
         alert_users_cities[city_name] = [update.message.chat_id]
 
-    update.message.reply_text("Alerts enabled for user %s in city %s" %(
+    update.message.reply_text("Alerts enabled for user %s in city %s." %(
                                 update.message.from_user.username, city_name
                                 ))
     return LISTENING_FOR_INPUT
 
 def alerts_location_disable(bot, update, user_data):
     if (update.message.text and not city_exists(update.message.text)):
-        update.message.reply_text("Invalid city. Rewrite it or send it again")
+        update.message.reply_text("Invalid city. Rewrite it or send it again.")
         return ALERTS_LOCATION_DISABLE
 
     city_name = get_city_name(lgt=update.message.location.longitude,
@@ -187,18 +218,18 @@ def alerts_location_disable(bot, update, user_data):
     if (not city_name in alert_users_cities or
     not update.message.chat_id in alert_users_cities[city_name]):
         update.message.reply_text("You are already not receiving updates for " +
-        "that location")
+        "that location.")
         return LISTENING_FOR_INPUT
 
     alert_users_cities[city_name].remove(update.message.chat_id)
-    update.message.reply_text("You have been removed from " + city_name)
+    update.message.reply_text("You have been removed from " + city_name + ".")
 
     return LISTENING_FOR_INPUT
 
 
 def near_hospitals(bot, update, user_data):
-    if update.message.text == 'YES':
-        display_menu_location(bot, update, "to find out nearby medical centres")
+    if update.message.text == 'Yes':
+        display_menu_location(bot, update, "to find out nearby medical centres.")
         return HOSPITAL_CHECKER
     else:
         update.message.reply_text(
@@ -236,28 +267,55 @@ def show_diagnose(bot, update, user_data):
     r, chart_filename = diagnostic(user_data['filename'])
 
     if len(r) == 1:
-        if r[0] == "perfect smile" or r[0] == "good eye":
-            update.message.reply_text("Congratulations! You are <b>Healthy</b>",
+        if r[0] == "perfectsmile" or r[0] == "good eye":
+            update.message.reply_text("Congratulations! You are <b>Healthy</b>.",
                                     parse_mode=ParseMode.HTML)
             return False
 
         update.message.reply_text("You have been diagnosed with <b>" + r[0] +
                                   "</b>.",
-                                  parse_mode='HTML')
-
-        f = open(chart_filename, 'rb')
-        bot.send_photo(chat_id=update.message.chat_id,
-                       photo=f)
-    else:
-        update.message.reply_text(
-        "You probably have " + r[0] + " or " + r[1] + "\n"
+                                  parse_mode=ParseMode.HTML
         )
+
+        update.message.reply_text("The suggested treatment for %s is:\n%s" %(r[0], treatments[r[0]]))
+    else:
+        if r[0] == "perfectsmile" or r[0] == "good eye" or \
+        r[1] == "perfectsmile" or r[1] == "good eye":
+            if (r[0] == "perfectsmile" and r[1] == "good eye") or \
+            r[1] == "perfectsmile" and r[1] == "good eye":
+                update.message.reply_text("Congratulations! You are <b>Healthy</b>.",
+                                        parse_mode=ParseMode.HTML
+                )
+                return True
+
+            bad_thing = ""
+            if r[0] == "perfectsmile" or r[0] == "good eye":
+                bad_thing = r[1]
+            else:
+                bad_thing = r[0]
+
+            update.message.reply_text("You are either <b>Healthy</b> or " +
+                                      "have <b>" + bad_thing + "</b>",
+                                      parse_mode=ParseMode.HTML
+            )
+
+        else:
+            update.message.reply_text(
+            "You probably have <b>" + r[0] + "</b> or <b>" + r[1] + "</b>.",
+            parse_mode=ParseMode.HTML
+            )
+
+
+    f = open(chart_filename, 'rb')
+    update.message.reply_text("Our diagnose has an accuracy of: ")
+    bot.send_photo(chat_id=update.message.chat_id,
+                   photo=f)
 
     return True
 
 def main():
     #Set TOKEN
-    updater = Updater('468902066:AAEtfsuHosRJPKKk_VVrM87n7r3BegC3Yew')
+    updater = Updater('417439438:AAHmj9RPgHYYEqXOdhahMTZEkBeBNeVN6T0')
 
     dispatcher = updater.dispatcher
 
@@ -276,7 +334,7 @@ def main():
                                                infection_received,
                                                pass_user_data=True)],
 
-            ASK_NEAR: [RegexHandler('^(YES|NO)$',
+            ASK_NEAR: [RegexHandler('^(Yes|No)$',
                                     near_hospitals,
                                     pass_user_data=True),
                       ],

@@ -90,7 +90,7 @@ def diagnostic(filename):
                    textfont=dict(size=42),
                    marker=dict(colors=['#0080ff', '#3399ff', '#66b3ff', '#99ccff', '#cce6ff']))
     layout = go.Layout(title='Prediction results', titlefont=dict(size=55),
-                       width=1560, height=1660,
+                       width=1560, height=2060,
                        legend=dict(font=dict(size=35)))
     fig = go.Figure(data=[trace], layout=layout)
     pie_filename = "pred_results_" + str(datetime.datetime.now()).replace(' ', '_')
